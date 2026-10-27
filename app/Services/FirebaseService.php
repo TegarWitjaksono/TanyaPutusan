@@ -19,6 +19,9 @@ class FirebaseService
         
         if (file_exists($credPath)) {
             $this->credentials = json_decode(file_get_contents($credPath), true);
+        } elseif (env('FIREBASE_CREDENTIALS_JSON')) {
+            $raw = env('FIREBASE_CREDENTIALS_JSON');
+            $this->credentials = json_decode($raw, true) ?: json_decode(base64_decode($raw), true);
         }
     }
 

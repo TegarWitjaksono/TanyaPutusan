@@ -147,21 +147,7 @@ class PutusanScraperController extends Controller
             $pythonBinary = $this->resolvePythonBinary();
             $command = "{$pythonBinary} \"{$this->pythonScriptPath}\" --yurisprudensi";
 
-            $pythonPaths = [
-                'C:\\Users\\user\\AppData\\Roaming\\Python\\Python314\\site-packages',
-                'C:\\Users\\user\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages',
-            ];
-            $systemEnv = array_merge($_ENV, $_SERVER);
-            $env = array_merge($systemEnv, [
-                'SystemRoot' => getenv('SystemRoot') ?: 'C:\\Windows',
-                'SYSTEMROOT' => getenv('SystemRoot') ?: 'C:\\Windows',
-                'windir' => getenv('windir') ?: 'C:\\Windows',
-                'PATH' => getenv('PATH') ?: 'C:\\Windows\\system32;C:\\Windows',
-                'PYTHONPATH' => implode(';', $pythonPaths),
-                'USERPROFILE' => 'C:\\Users\\user',
-                'APPDATA' => 'C:\\Users\\user\\AppData\\Roaming',
-                'LOCALAPPDATA' => 'C:\\Users\\user\\AppData\\Local',
-            ]);
+            $env = $this->getPythonExecutionEnv();
 
             $res = Process::timeout(300)->env($env)->path(base_path())->run($command);
             if ($res->successful()) {
@@ -292,25 +278,7 @@ class PutusanScraperController extends Controller
          $argsStr = implode(' ', $cmdArgs);
          $command = "{$pythonBinary} \"{$this->pythonScriptPath}\" {$argsStr}";
 
-         // Siapkan environment variables agar modul python user-site (curl_cffi, dll) terbaca saat dijalankan oleh child process PHP
-         $pythonPaths = [
-             'C:\\Users\\user\\AppData\\Roaming\\Python\\Python314\\site-packages',
-             'C:\\Users\\user\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages',
-         ];
-
-         // Gabungkan seluruh environment Windows sistem (termasuk SystemRoot & PATH penting untuk Winsock)
-         $systemEnv = array_merge($_ENV, $_SERVER);
-
-         $env = array_merge($systemEnv, [
-             'SystemRoot' => getenv('SystemRoot') ?: 'C:\\Windows',
-             'SYSTEMROOT' => getenv('SystemRoot') ?: 'C:\\Windows',
-             'windir' => getenv('windir') ?: 'C:\\Windows',
-             'PATH' => getenv('PATH') ?: 'C:\\Windows\\system32;C:\\Windows',
-             'PYTHONPATH' => implode(';', $pythonPaths),
-             'USERPROFILE' => 'C:\\Users\\user',
-             'APPDATA' => 'C:\\Users\\user\\AppData\\Roaming',
-             'LOCALAPPDATA' => 'C:\\Users\\user\\AppData\\Local',
-         ]);
+         $env = $this->getPythonExecutionEnv();
 
          // Tambah timeout proporsional terhadap jumlah halaman (30 detik per halaman)
          $timeout = max(120, $pages * 30);
@@ -447,22 +415,7 @@ class PutusanScraperController extends Controller
         $pythonBinary = $this->resolvePythonBinary();
         $command = "{$pythonBinary} \"{$this->pythonScriptPath}\" --stats";
 
-        $pythonPaths = [
-            'C:\\Users\\user\\AppData\\Roaming\\Python\\Python314\\site-packages',
-            'C:\\Users\\user\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages',
-        ];
-
-        $systemEnv = array_merge($_ENV, $_SERVER);
-        $env = array_merge($systemEnv, [
-            'SystemRoot' => getenv('SystemRoot') ?: 'C:\\Windows',
-            'SYSTEMROOT' => getenv('SystemRoot') ?: 'C:\\Windows',
-            'windir' => getenv('windir') ?: 'C:\\Windows',
-            'PATH' => getenv('PATH') ?: 'C:\\Windows\\system32;C:\\Windows',
-            'PYTHONPATH' => implode(';', $pythonPaths),
-            'USERPROFILE' => 'C:\\Users\\user',
-            'APPDATA' => 'C:\\Users\\user\\AppData\\Roaming',
-            'LOCALAPPDATA' => 'C:\\Users\\user\\AppData\\Local',
-        ]);
+        $env = $this->getPythonExecutionEnv();
 
         $res = Process::timeout(15)->env($env)->path(base_path())->run($command);
         if ($res->successful()) {
@@ -513,22 +466,7 @@ class PutusanScraperController extends Controller
         $argsStr = implode(' ', $cmdArgs);
         $command = "{$pythonBinary} \"{$this->pythonScriptPath}\" {$argsStr}";
 
-        $pythonPaths = [
-            'C:\\Users\\user\\AppData\\Roaming\\Python\\Python314\\site-packages',
-            'C:\\Users\\user\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages',
-        ];
-
-        $systemEnv = array_merge($_ENV, $_SERVER);
-        $env = array_merge($systemEnv, [
-            'SystemRoot' => getenv('SystemRoot') ?: 'C:\\Windows',
-            'SYSTEMROOT' => getenv('SystemRoot') ?: 'C:\\Windows',
-            'windir' => getenv('windir') ?: 'C:\\Windows',
-            'PATH' => getenv('PATH') ?: 'C:\\Windows\\system32;C:\\Windows',
-            'PYTHONPATH' => implode(';', $pythonPaths),
-            'USERPROFILE' => 'C:\\Users\\user',
-            'APPDATA' => 'C:\\Users\\user\\AppData\\Roaming',
-            'LOCALAPPDATA' => 'C:\\Users\\user\\AppData\\Local',
-        ]);
+        $env = $this->getPythonExecutionEnv();
 
         $result = Process::timeout(30)
             ->env($env)
@@ -750,22 +688,7 @@ class PutusanScraperController extends Controller
         $cleanUrl = escapeshellarg($url);
         $command = "{$pythonBinary} \"{$this->pythonScriptPath}\" --preview {$cleanUrl}";
 
-        $pythonPaths = [
-            'C:\\Users\\user\\AppData\\Roaming\\Python\\Python314\\site-packages',
-            'C:\\Users\\user\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages',
-        ];
-
-        $systemEnv = array_merge($_ENV, $_SERVER);
-        $env = array_merge($systemEnv, [
-            'SystemRoot' => getenv('SystemRoot') ?: 'C:\\Windows',
-            'SYSTEMROOT' => getenv('SystemRoot') ?: 'C:\\Windows',
-            'windir' => getenv('windir') ?: 'C:\\Windows',
-            'PATH' => getenv('PATH') ?: 'C:\\Windows\\system32;C:\\Windows',
-            'PYTHONPATH' => implode(';', $pythonPaths),
-            'USERPROFILE' => 'C:\\Users\\user',
-            'APPDATA' => 'C:\\Users\\user\\AppData\\Roaming',
-            'LOCALAPPDATA' => 'C:\\Users\\user\\AppData\\Local',
-        ]);
+        $env = $this->getPythonExecutionEnv();
 
         $res = Process::timeout(35)->env($env)->path(base_path())->run($command);
         if (!$res->successful()) {
@@ -807,22 +730,7 @@ class PutusanScraperController extends Controller
             $cleanPath = escapeshellarg($pdfPath);
             $command = "{$pythonBinary} \"{$this->pythonScriptPath}\" --get-pdf {$cleanUrl} --save-to {$cleanPath}";
 
-            $pythonPaths = [
-                'C:\\Users\\user\\AppData\\Roaming\\Python\\Python314\\site-packages',
-                'C:\\Users\\user\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages',
-            ];
-
-            $systemEnv = array_merge($_ENV, $_SERVER);
-            $env = array_merge($systemEnv, [
-                'SystemRoot' => getenv('SystemRoot') ?: 'C:\\Windows',
-                'SYSTEMROOT' => getenv('SystemRoot') ?: 'C:\\Windows',
-                'windir' => getenv('windir') ?: 'C:\\Windows',
-                'PATH' => getenv('PATH') ?: 'C:\\Windows\\system32;C:\\Windows',
-                'PYTHONPATH' => implode(';', $pythonPaths),
-                'USERPROFILE' => 'C:\\Users\\user',
-                'APPDATA' => 'C:\\Users\\user\\AppData\\Roaming',
-                'LOCALAPPDATA' => 'C:\\Users\\user\\AppData\\Local',
-            ]);
+            $env = $this->getPythonExecutionEnv();
 
             $res = Process::timeout(45)->env($env)->path(base_path())->run($command);
             if (!$res->successful() || !File::exists($pdfPath) || File::size($pdfPath) < 500) {
@@ -838,10 +746,52 @@ class PutusanScraperController extends Controller
     }
 
     /**
+     * Siapkan environment variables untuk eksekusi child process Python secara cross-platform
+     */
+    protected function getPythonExecutionEnv(): array
+    {
+        $systemEnv = array_merge($_ENV, $_SERVER);
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            $pythonPaths = [
+                'C:\\Users\\user\\AppData\\Roaming\\Python\\Python314\\site-packages',
+                'C:\\Users\\user\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages',
+            ];
+            return array_merge($systemEnv, [
+                'SystemRoot' => getenv('SystemRoot') ?: 'C:\\Windows',
+                'SYSTEMROOT' => getenv('SystemRoot') ?: 'C:\\Windows',
+                'windir' => getenv('windir') ?: 'C:\\Windows',
+                'PATH' => getenv('PATH') ?: 'C:\\Windows\\system32;C:\\Windows',
+                'PYTHONPATH' => implode(';', $pythonPaths),
+                'USERPROFILE' => 'C:\\Users\\user',
+                'APPDATA' => 'C:\\Users\\user\\AppData\\Roaming',
+                'LOCALAPPDATA' => 'C:\\Users\\user\\AppData\\Local',
+            ]);
+        }
+
+        // Environment standar untuk Linux / Docker (Render, Fly.io, Ubuntu)
+        return array_merge($systemEnv, [
+            'PYTHONUNBUFFERED' => '1',
+            'PATH' => getenv('PATH') ?: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+        ]);
+    }
+
+    /**
      * Deteksi executable Python yang tersedia di sistem
      */
     protected function resolvePythonBinary(): string
     {
+        if (PHP_OS_FAMILY !== 'Windows') {
+            // Linux / Docker container
+            foreach (['python3', 'python'] as $bin) {
+                $test = Process::run("{$bin} --version");
+                if ($test->successful()) {
+                    return $bin;
+                }
+            }
+            return 'python3';
+        }
+
         // Prioritaskan Python 3.11 yang stabil dan kompatibel penuh dengan Winsock socket Windows
         $candidates = [
             'py -3.11',
@@ -1004,22 +954,7 @@ class PutusanScraperController extends Controller
             $command = "{$pythonBinary} \"{$this->pythonScriptPath}\" --extract-text {$cleanUrl} --save-to {$cleanPath}";
         }
 
-        $pythonPaths = [
-            'C:\\Users\\user\\AppData\\Roaming\\Python\\Python314\\site-packages',
-            'C:\\Users\\user\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python311\\site-packages',
-        ];
-
-        $systemEnv = array_merge($_ENV, $_SERVER);
-        $env = array_merge($systemEnv, [
-            'SystemRoot' => getenv('SystemRoot') ?: 'C:\\Windows',
-            'SYSTEMROOT' => getenv('SystemRoot') ?: 'C:\\Windows',
-            'windir' => getenv('windir') ?: 'C:\\Windows',
-            'PATH' => getenv('PATH') ?: 'C:\\Windows\\system32;C:\\Windows',
-            'PYTHONPATH' => implode(';', $pythonPaths),
-            'USERPROFILE' => 'C:\\Users\\user',
-            'APPDATA' => 'C:\\Users\\user\\AppData\\Roaming',
-            'LOCALAPPDATA' => 'C:\\Users\\user\\AppData\\Local',
-        ]);
+        $env = $this->getPythonExecutionEnv();
 
         try {
             $res = Process::timeout(18)->env($env)->path(base_path())->run($command);
