@@ -1,0 +1,28 @@
+app = 'tanyaputusan'
+primary_region = 'sin'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  APP_ENV = 'production'
+  APP_DEBUG = 'false'
+  APP_NAME = 'TanyaPutusan'
+  APP_URL = 'https://tanyaputusan.fly.dev'
+  DB_CONNECTION = 'sqlite'
+  LOG_CHANNEL = 'stderr'
+  LOG_LEVEL = 'info'
+  SESSION_DRIVER = 'file'
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

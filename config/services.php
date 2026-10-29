@@ -55,4 +55,10 @@ return [
         'model' => env('OLLAMA_MODEL', 'llama3.2:latest'),
     ],
 
+    'supabase' => [
+        'url' => env('SUPABASE_URL'),
+        'key' => env('SUPABASE_KEY'),
+        'bucket' => env('SUPABASE_BUCKET', 'putusan-pdf'),
+    ],
+
 ];

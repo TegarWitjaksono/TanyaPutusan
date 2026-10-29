@@ -254,4 +254,45 @@ class FirebaseService
             return null;
         }
     }
+
+    /**
+     * Catat histori unduhan dokumen PDF putusan ke Cloud Firestore
+     * Collection: putusan_downloads
+     */
+    public function recordPdfDownload(string $url, ?string $title = null, ?string $userName = null, ?string $userEmail = null): bool
+    {
+        try {
+            $token = $this->getAccessToken();
+            if (!$token) return false;
+
+            $hash = md5($url);
+            $docId = $hash . '_' . time();
+
+            $endpoint = "https://firestore.googleapis.com/v1/projects/{$this->projectId}/databases/(default)/documents/putusan_downloads/{$docId}";
+
+            $data = [
+                'doc_hash' => $hash,
+                'url' => $url,
+                'title' => $title ?: 'Putusan Mahkamah Agung',
+                'user_name' => $userName ?: 'Guest User',
+                'user_email' => $userEmail ?: 'guest@tanyaputusan.local',
+                'downloaded_at' => now()->toIso8601String(),
+                'ip_address' => request()->ip() ?: '127.0.0.1',
+            ];
+
+            $fields = $this->formatFirestoreFields($data);
+
+            $res = Http::withoutVerifying()
+                ->timeout(10)
+                ->withToken($token)
+                ->patch($endpoint, [
+                    'fields' => $fields
+                ]);
+
+            return $res->successful();
+        } catch (\Throwable $e) {
+            Log::warning('Firebase recordPdfDownload error: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

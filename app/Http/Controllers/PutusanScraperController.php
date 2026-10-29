@@ -738,10 +738,49 @@ class PutusanScraperController extends Controller
             }
         }
 
-        // Tampilkan langsung di browser sebagai inline PDF
+        // Unggah & Simpan Berkas PDF ke Supabase Storage (Cloud Storage)
+        $supabaseUrl = null;
+        try {
+            $supabase = new \App\Services\SupabaseService();
+            $remoteName = "putusan_{$hash}.pdf";
+            $supabaseUrl = $supabase->uploadPdf($pdfPath, $remoteName);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Supabase upload exception: ' . $e->getMessage());
+        }
+
+        // Catat aktivitas unduhan/akses PDF beserta Supabase Storage URL ke Firestore
+        try {
+            $firebase = new \App\Services\FirebaseService();
+            $user = auth()->user();
+            $firebase->recordPdfDownload(
+                $url, 
+                $request->input('title', 'Putusan Mahkamah Agung'),
+                $user ? $user->name : 'Pengunjung Web',
+                $user ? $user->email : 'guest@tanyaputusan.local'
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Gagal mencatat download ke Firebase: ' . $e->getMessage());
+        }
+
+        // Tentukan nama file yang rapi saat didownload
+        $rawTitle = $request->input('title', 'salinan_putusan_ma');
+        $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $rawTitle);
+        $safeName = trim(preg_replace('/_+/', '_', $safeName), '_');
+        $fileName = (!empty($safeName) ? $safeName : 'salinan_putusan_ma') . '.pdf';
+
+        $isDownload = $request->boolean('download', false);
+        $dispositionType = $isDownload ? 'attachment' : 'inline';
+
+        if ($isDownload) {
+            return response()->download($pdfPath, $fileName, [
+                'Content-Type' => 'application/pdf',
+            ]);
+        }
+
+        // Tampilkan langsung di browser sebagai inline PDF (untuk pratinjau tab)
         return response()->file($pdfPath, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="salinan_putusan_ma.pdf"'
+            'Content-Disposition' => "{$dispositionType}; filename=\"{$fileName}\""
         ]);
     }
 

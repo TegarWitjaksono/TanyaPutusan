@@ -423,6 +423,13 @@
 
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <button 
+                                        type="button"
+                                        onclick="downloadPDF('{{ $item['url'] ?? '' }}', '{{ addslashes($item['judul'] ?? 'Putusan Mahkamah Agung') }}', this)"
+                                        class="px-3.5 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-gold-500 hover:from-amber-600 hover:to-gold-600 text-navy-950 font-bold transition flex items-center gap-1.5 shadow-xs text-xs cursor-pointer group"
+                                        title="Download PDF Salinan Resmi Perkara (Otomatis Dicatat ke Firebase)" >
+                                        <i class="fa-solid fa-download"></i> <span>Download PDF</span>
+                                    </button>
+                                    <button 
                                         type="button" 
                                         onclick="openAiBedahPutusan('{{ $item['url'] ?? '' }}', '{{ addslashes($item['judul'] ?? 'Putusan Mahkamah Agung') }}')" 
                                         class="px-3.5 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-gold-500 hover:from-amber-600 hover:to-gold-600 text-navy-950 font-bold transition flex items-center gap-1.5 shadow-xs text-xs cursor-pointer group"
@@ -670,7 +677,6 @@
                                     class="appearance-none bg-slate-100 hover:bg-slate-200/80 border border-slate-300 rounded-xl pl-8 pr-7 py-3 text-xs font-semibold text-slate-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-navy-600 transition shadow-2xs"
                                     title="Pilih Engine AI (Lokal atau Cloud)"
                                 >
-                                    <option value="ollama" selected>⚡ Ollama (Llama 3.2)</option>
                                     <option value="gemini">☁️ Gemini 2.5 Flash</option>
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-500">
@@ -868,10 +874,7 @@
                                     <p class="text-[11px] text-slate-500">Analisis ratio decidendi, amar pertimbangan, dan kaidah hukum</p>
                                 </div>
                             </div>
-                            <span id="modal-ai-header-badge" class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-900 border border-indigo-200 flex items-center gap-1 shrink-0">
-                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
-                                Ollama Llama 3.2 Aktif
-                            </span>
+                                            
                         </div>
 
                         <!-- Chat Messages Container -->
@@ -947,7 +950,6 @@
                                                 class="appearance-none bg-slate-100 hover:bg-slate-200/80 border border-slate-300 rounded-xl pl-8 pr-7 py-2.5 text-xs font-semibold text-slate-800 cursor-pointer focus:outline-none focus:ring-1 focus:ring-navy-600 transition shadow-2xs"
                                                 title="Pilih Engine AI (Lokal atau Cloud)"
                                             >
-                                                <option value="ollama" selected>⚡ Ollama (Llama 3.2)</option>
                                                 <option value="gemini">☁️ Gemini 2.5 Flash</option>
                                             </select>
                                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-500">
@@ -1530,6 +1532,73 @@
             window.location.href = url;
         }
 
+        // Fungsi Download Berkas PDF Putusan MA & Simpan Log ke Database Firebase
+        async function downloadPDF(url, title, btnElement) {
+            if (!url) {
+                alert('Tautan berkas perkara tidak ditemukan.');
+                return;
+            }
+
+            const originalHtml = btnElement ? btnElement.innerHTML : '';
+            if (btnElement) {
+                btnElement.disabled = true;
+                btnElement.classList.add('opacity-75', 'cursor-not-allowed');
+                btnElement.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Mengunduh...</span>';
+            }
+
+            try {
+                const downloadEndpoint = "{{ route('putusan.pdf') }}?url=" + encodeURIComponent(url) + "&title=" + encodeURIComponent(title || '') + "&download=1";
+
+                // Buat elemen link tersembunyi untuk memicu browser native download
+                const link = document.createElement('a');
+                link.href = downloadEndpoint;
+                link.setAttribute('download', (title ? title.replace(/[^a-zA-Z0-9_\-]/g, '_') : 'salinan_putusan_ma') + '.pdf');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Tampilkan notifikasi toast kecil bahwa unduhan dimulai dan disimpan ke Firebase
+                showToastNotification('Mengunduh salinan resmi PDF dan mencatat ke database Firebase.');
+            } catch (err) {
+                console.error(err);
+                alert('Terjadi kesalahan saat memproses unduhan PDF.');
+            } finally {
+                if (btnElement) {
+                    setTimeout(() => {
+                        btnElement.disabled = false;
+                        btnElement.classList.remove('opacity-75', 'cursor-not-allowed');
+                        btnElement.innerHTML = originalHtml;
+                    }, 2500);
+                }
+            }
+        }
+
+        // Notifikasi toast interaktif
+        function showToastNotification(message) {
+            const existingToast = document.getElementById('app-download-toast');
+            if (existingToast) existingToast.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'app-download-toast';
+            toast.className = 'fixed bottom-5 right-5 z-50 bg-navy-950 text-white px-4 py-3 rounded-xl shadow-2xl border border-gold-500/30 flex items-center gap-3 text-xs animate-in slide-in-from-bottom duration-300';
+            toast.innerHTML = `
+                <div class="w-6 h-6 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-cloud-arrow-down text-xs"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-white text-[11px]">Download Sedang Berjalan</p>
+                    <p class="text-slate-300 text-[10px] mt-0.5">${message}</p>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                if (toast) {
+                    toast.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                    setTimeout(() => toast.remove(), 500);
+                }
+            }, 4000);
+        }
+
         // Buka Modal Pratinjau Perkara Langsung (Bisa baca ringkasan dulu baru buka PDF)
         async function openPratinjau(url, title) {
             if (!url) {
@@ -1932,6 +2001,13 @@
                         </div>
 
                         <div class="flex items-center gap-2 flex-wrap">
+                            <button 
+                                type="button"
+                                onclick="downloadPDF('${item.url || ''}', '${safeTitle}', this)"
+                                class="px-3.5 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-gold-500 hover:from-amber-600 hover:to-gold-600 text-navy-950 font-bold transition flex items-center gap-1.5 shadow-xs text-xs cursor-pointer group"
+                                title="Download PDF Salinan Resmi Perkara (Otomatis Dicatat ke Firebase)" >
+                                <i class="fa-solid fa-download"></i> <span>Download PDF</span>
+                            </button>
                             <button 
                                 type="button" 
                                 onclick="openAiBedahPutusan('${item.url || ''}', '${safeTitle}')" 

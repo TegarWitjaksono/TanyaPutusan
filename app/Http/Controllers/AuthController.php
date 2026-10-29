@@ -158,7 +158,7 @@ class AuthController extends Controller
     public function redirectToGoogle(Request $request)
     {
         $clientId = config('services.google.client_id');
-        $redirectUri = url('/auth/google/callback');
+        $redirectUri = $request->getSchemeAndHttpHost() . '/auth/google/callback';
         
         $state = bin2hex(random_bytes(16));
         $request->session()->put('google_oauth_state', $state);
@@ -200,7 +200,7 @@ class AuthController extends Controller
 
         $clientId = config('services.google.client_id');
         $clientSecret = config('services.google.client_secret');
-        $redirectUri = url('/auth/google/callback');
+        $redirectUri = $request->getSchemeAndHttpHost() . '/auth/google/callback';
         $mode = $request->session()->pull('google_oauth_mode', 'login');
 
         try {
